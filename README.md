@@ -48,6 +48,104 @@ A Spring Boot application that provides a Java wrapper around the LLaMA C++ libr
    mvn package
    ```
 
+## Running the Application
+
+### Quick Start Guide
+
+The application supports two modes: **Real LLM Integration** (with llama-server.exe) and **Enhanced Mock Mode** (fallback).
+
+#### Option 1: Real LLM Integration (Recommended)
+
+**Step 1: Start LLaMA Server**
+```cmd
+# Navigate to llama-server directory
+cd "...\source\repos\LLAama\llama.cpp\build\bin\Release"
+
+# Start server with your model
+.\llama-server.exe --model "...\source\repos\Cortana\AIModels\Llama-3.2-3B-Instruct-Q3_K_L.gguf" --port 8081 --host 127.0.0.1 --ctx-size 2048
+```
+
+**Wait for confirmation:**
+```
+main: server is listening on http://127.0.0.1:8081 - starting the main loop
+```
+
+**Step 2: Verify LLaMA Server**
+```powershell
+# Test health endpoint
+Invoke-RestMethod -Uri "http://127.0.0.1:8081/health" -Method GET
+```
+
+**Step 3: Start Spring Boot Application**
+```cmd
+# Navigate to project directory
+cd "...\source\repos\LlamaJavaLiveCoding\demo"
+
+# Start the application
+.\mvnw.cmd spring-boot:run
+```
+
+**Wait for confirmation:**
+```
+Started DemoApplication in X.X seconds
+```
+
+**Step 4: Test Real LLM Integration**
+```powershell
+# Check status - should show real_llama_available: true
+Invoke-RestMethod -Uri "http://localhost:8080/llama/status" -Method GET
+
+# Test real LLM generation
+Invoke-RestMethod -Uri "http://localhost:8080/llama/generate?prompt=What is quantum computing?" -Method GET
+```
+
+#### Option 2: Enhanced Mock Mode (Fallback)
+
+If you skip the LLaMA server setup, the application automatically runs in enhanced mock mode:
+
+```cmd
+# Just start the Spring Boot application
+cd "...\source\repos\LlamaJavaLiveCoding\demo"
+.\mvnw.cmd spring-boot:run
+```
+
+### Expected Response Formats
+
+#### Real LLM Mode:
+```json
+{
+  "text": "Quantum computing is a revolutionary computational paradigm...",
+  "mode": "real_llama",
+  "prompt_length": 25
+}
+```
+
+#### Enhanced Mock Mode:
+```json
+{
+  "text": "That's a fascinating topic! Quantum computing leverages...",
+  "mode": "enhanced_mock",
+  "prompt_length": 25
+}
+```
+
+### Process Management
+
+```powershell
+# Check if llama-server is running
+Get-Process | Where-Object { $_.Name -like "*llama*" }
+
+# Stop llama-server if needed
+Stop-Process -Name "llama-server" -Force
+```
+
+### Troubleshooting Startup
+
+- **LLaMA server fails to start**: Check model path and file existence
+- **Connection refused**: Verify port 8081 not in use, check firewall
+- **real_llama_available: false**: Ensure llama-server started first
+- **Spring Boot startup issues**: Check port 8080 availability
+
 ## Configuration
 
 Edit `src/main/resources/application.properties`:
